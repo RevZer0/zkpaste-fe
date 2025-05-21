@@ -2,25 +2,109 @@
 
 
 import {useRef} from "react";
+import { useForm } from "react-hook-form";
 import Image from "next/image";
-import Textarea from "./components/textarea";
-import Button from "./components/button";
-import Password from "./components/password"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+
+import {
+  Select, 
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 export default function Home() {
-  const txref = useRef(null);
-  const pwref = useRef(null);
+  const form = useForm({
+    defaultValues: {
+      paste: "",
+      password: "",
+      ttl: "",
+      opens: "",
+    }
+  })
   return (
-      <div> 
-        <div>
-          <Textarea txref={txref}/>
+    <Form {...form}>
+      <form className="space-y-4 p-4 min-h-full grow max-w-6xl">
+        <FormField
+          control={form.control}
+          name="paste"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Content</FormLabel>
+              <FormControl>
+                <Textarea className="min-h-140 md:min-h-170" placeholder="Paste your content here" {... field}></Textarea>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex flex-col md:flex-row md:justify-start gap-4">
+          <FormField
+            control={form.control}
+            name="ttl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expire after</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select expiration period"/>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="3600">1 hour</SelectItem>
+                    <SelectItem value="86400">1 day</SelectItem>
+                    <SelectItem value="432000">5 day</SelectItem>
+                    <SelectItem value="604800">1 week</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="opens"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Limit opens count</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter max opens count" {... field}></Input>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Protect with password</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter password" {... field}></Input>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <div>
-          <Password pwref={pwref}/>
+        <div className="flex justify-start">
+          <Button className="w-full md:w-30">Paste!</Button>
         </div>
-        <div>
-          <Button target={txref} password={pwref}/>
-        </div>
-      </div>
+      </form>
+    </Form>
   );
 }

@@ -44,7 +44,7 @@ export default function Home() {
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea className="min-h-140 md:min-h-170" placeholder="Paste your content here" {... field}></Textarea>
+                <Textarea className="min-h-130 md:min-h-160" placeholder="Paste your content here" {... field}></Textarea>
               </FormControl>
               <FormMessage />
             </FormItem>

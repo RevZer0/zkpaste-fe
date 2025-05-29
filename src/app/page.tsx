@@ -30,21 +30,21 @@ import { EncryptPayload, ArmorValue } from "@/app/service/paste"
 
 
 async function onSubmit(values) {
-  const {iv, ciphertext, signature} = await EncryptPayload(values.paste, values.password)
+  const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
   const payload = {
     iv: ArmorValue(iv),
     ciphertext: ArmorValue(ciphertext),
     signature: ArmorValue(signature),
     metadata: {
       password_protected: values.password.length > 0,
-      opens_count: values.opens || null,
-      ttl: values.ttl || null
+      opens_count: parseInt(values.opens) || null,
+      ttl: parseInt(values.ttl) || 86400
     }
   }
   const {data} = await axios.post('http://localhost:8000/paste', payload, {
     headers: {'Content-type': 'application/json'}
   });
-  console.log(data);
+  console.log("View paste URL: http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
 }
 
 export default function Home() {
@@ -86,9 +86,11 @@ export default function Home() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <SelectItem value="600">10 minutes</SelectItem>
+                    <SelectItem value="1800">30 minutes</SelectItem>
                     <SelectItem value="3600">1 hour</SelectItem>
                     <SelectItem value="86400">1 day</SelectItem>
-                    <SelectItem value="432000">5 day</SelectItem>
+                    <SelectItem value="432000">5 days</SelectItem>
                     <SelectItem value="604800">1 week</SelectItem>
                   </SelectContent>
                 </Select>

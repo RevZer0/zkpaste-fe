@@ -16,11 +16,12 @@ const EncryptPayload = async (plaintext, password) => {
     encoder.encode(plaintext)
   )
   const signature = await signPayload(encryptionKey, plaintext)
-
+  const keyView = await window.crypto.subtle.exportKey("raw", baseKey)
   return {
     iv: iv,
     ciphertext: new Uint8Array(ciphertext),
-    signature: new Uint8Array(signature)
+    signature: new Uint8Array(signature),
+    key: new Uint8Array(keyView)
   }
 };
 

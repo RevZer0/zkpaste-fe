@@ -7,7 +7,7 @@ export default function Button({target, password}) {
     // 2. Generate cipher key
     // 3. Generate AES-GCM ciphertextA
     const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder()
     const plaintext = target.current.value;
     const passwordtext = password.current.value;
     const iv = window.crypto.getRandomValues(new Uint8Array(12));

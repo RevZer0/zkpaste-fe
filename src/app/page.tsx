@@ -25,6 +25,28 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
+import axios from 'axios'
+import { EncryptPayload, ArmorValue } from "@/app/service/paste"
+
+
+async function onSubmit(values) {
+  const {iv, ciphertext, signature} = await EncryptPayload(values.paste, values.password)
+  const payload = {
+    iv: ArmorValue(iv),
+    ciphertext: ArmorValue(ciphertext),
+    signature: ArmorValue(signature),
+    metadata: {
+      password_protected: values.password.length > 0,
+      opens_count: values.opens || null,
+      ttl: values.ttl || null
+    }
+  }
+  const {data} = await axios.post('http://localhost:8000/paste', payload, {
+    headers: {'Content-type': 'application/json'}
+  });
+  console.log(data);
+}
+
 export default function Home() {
   const form = useForm({
     defaultValues: {
@@ -36,7 +58,7 @@ export default function Home() {
   })
   return (
     <Form {...form}>
-      <form className="space-y-4 p-4 min-h-full grow max-w-6xl">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <FormField
           control={form.control}
           name="paste"
@@ -81,7 +103,7 @@ export default function Home() {
               <FormItem>
                 <FormLabel>Limit opens count</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter max opens count" {... field}></Input>
+                  <Input type="number" placeholder="Enter max opens count" {... field}></Input>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -94,7 +116,7 @@ export default function Home() {
               <FormItem>
                 <FormLabel>Protect with password</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter password" {... field}></Input>
+                  <Input type="password" placeholder="Enter password" {... field}></Input>
                 </FormControl>
                 <FormMessage />
               </FormItem>

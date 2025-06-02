@@ -17,6 +17,7 @@ import { DearmorValue } from '@/app/service/armor'
 const PasteView = ({params}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
   const [plainText, setPlainText] = useState("Decoding...")
+  const [decryptFailed, setDecryptFailed] = useState(false)
   const { paste_id } = use(params)
   
   useEffect(() => {
@@ -27,23 +28,29 @@ const PasteView = ({params}) => {
       }
       const json = await response.json()
       
-      setPasswordProtected(json.passwordProtected)
+      setPasswordProtected(json.password_protected)
       
-      const plainText = await DecryptPaste(
-        DearmorValue(json.paste), 
-        DearmorValue(window.location.hash.substring(1)),
-        DearmorValue(json.iv),
-        null
-      )
-      setPlainText(
-        String.fromCharCode(...plainText)
-      ) 
-    }
-
+      try {
+        const plainText = await DecryptPaste(
+          DearmorValue(json.paste), 
+          DearmorValue(window.location.hash.substring(1)),
+          DearmorValue(json.iv),
+          null 
+        )
+        setPlainText(
+          String.fromCharCode(...plainText)
+        )
+      } catch (error) {
+        setDecryptFailed(true) 
+      }
+    } 
     decodeCipher()
     return () => {}
   }, [paste_id])
   
+  if (decryptFailed) {
+    return (<h1>Failed to decrypt the paste</h1>)
+  }
 
   return (
     <div className="space-y-4 p-4 min-h-full grow max-w-6xl">

@@ -1,5 +1,7 @@
-const encoder = new TextEncoder();
+const encoder = new TextEncoder()
 const decoder = new TextDecoder()
+
+
 
 const EncryptPayload = async (plaintext: string, password: string) => {
   
@@ -28,12 +30,12 @@ const EncryptPayload = async (plaintext: string, password: string) => {
 const DecryptPaste = async (
   ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, password: string
 ): Uint8Array => {
-  if (password) {
-    throw new Error("Password logic has to be implemented")
-  }
-  const encryptionKey = await window.crypto.subtle.importKey(
-    "raw", key, {name: "AES-GCM"}, false, ["decrypt"]
+  let encryptionKey = await window.crypto.subtle.importKey(
+    "raw", key, {name: "AES-GCM"}, true, ["decrypt"]
   )
+  if (password) {
+    encryptionKey = await deriveKeyFromPassword(encryptionKey, password)
+  }
   const plaintext = await window.crypto.subtle.decrypt(
     {name: "AES-GCM", iv}, encryptionKey, ciphertext
   )

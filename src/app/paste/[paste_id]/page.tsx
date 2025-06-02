@@ -16,25 +16,31 @@ import { DearmorValue } from '@/app/service/armor'
 
 const PasteView = ({params}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
-  const [plainText, setPlainText] = useState("Decoding...")
+  const [plainText, setPlainText] = useState(null)
   const [decryptFailed, setDecryptFailed] = useState(false)
+  const [pasteData, setPasteData] = useState(null)
   const { paste_id } = use(params)
   
   useEffect(() => {
-    const decodeCipher = async () => {
+    const fetchPasteData = async () => {
       const response = await fetch(`http://localhost:8000/paste/${paste_id}`)
       if (response.status !== 200) {
         throw new Error("Paste not found message should be implemented in the future")
       }
       const json = await response.json()
-      
-      setPasswordProtected(json.password_protected)
-      
+      setPasteData({
+        iv: json.iv,
+        paste: json.paste,
+        passwordProtected: json.password_protected
+      })
+    }
+
+    const decodeCipher = async () => {
       try {
         const plainText = await DecryptPaste(
-          DearmorValue(json.paste), 
+          DearmorValue(pasteData.paste), 
           DearmorValue(window.location.hash.substring(1)),
-          DearmorValue(json.iv),
+          DearmorValue(pasteData.iv),
           null 
         )
         setPlainText(
@@ -44,12 +50,26 @@ const PasteView = ({params}) => {
         setDecryptFailed(true) 
       }
     } 
-    decodeCipher()
+    if (!pasteData) {
+      fetchPasteData()
+    }
+    if (pasteData && !pasteData.passwordProtected) {
+      decodeCipher()
+    }
     return () => {}
-  }, [paste_id])
+  }, [pasteData])
   
   if (decryptFailed) {
     return (<h1>Failed to decrypt the paste</h1>)
+  }
+  if (!pasteData) {
+    return (<h1>Loading...</h1>)
+  }
+  if (pasteData && pasteData.passwordProtected) {
+    return (<h1>This paste is password protected</h1>)
+  }
+  if (pasteData && !plainText) {
+    return (<h1>Decoding...</h1>)
   }
 
   return (

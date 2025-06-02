@@ -1,7 +1,7 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder()
 
-const EncryptPayload = async (plaintext, password) => {
+const EncryptPayload = async (plaintext: string, password: string) => {
   
   const iv = genAESInitVector()
   const baseKey = await genAESKey()
@@ -23,11 +23,22 @@ const EncryptPayload = async (plaintext, password) => {
     signature: new Uint8Array(signature),
     key: new Uint8Array(keyView)
   }
-};
+}
 
-const ArmorValue = (value) => {
-  return btoa(String.fromCharCode(...value))
-} 
+const DecryptPaste = async (
+  ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, password: string
+): Uint8Array => {
+  if (password) {
+    throw new Error("Password logic has to be implemented")
+  }
+  const encryptionKey = await window.crypto.subtle.importKey(
+    "raw", key, {name: "AES-GCM"}, false, ["decrypt"]
+  )
+  const plaintext = await window.crypto.subtle.decrypt(
+    {name: "AES-GCM", iv}, encryptionKey, ciphertext
+  )
+  return new Uint8Array(plaintext)
+}
 
 const genAESInitVector = () => {
   return window.crypto.getRandomValues(new Uint8Array(12))
@@ -37,7 +48,7 @@ const genAESKey = async () => {
   return await window.crypto.subtle.generateKey(
     {name: "AES-GCM", length: 256},
     true, 
-    ["encrypt", "decrypt"]
+    ["encrypt"]
   )
 }
 
@@ -67,12 +78,12 @@ const signPayload = async (encryptionKey, plaintext) => {
       name:"HMAC",
       hash: {name: "SHA-256"},
     }, false, ["sign"]
-  );
+  )
   return await window.crypto.subtle.sign("HMAC", signKey, encoder.encode(plaintext));
 }
 
 
 export {
   EncryptPayload,
-  ArmorValue
-};
+  DecryptPaste
+}

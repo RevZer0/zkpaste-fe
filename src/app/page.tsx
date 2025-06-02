@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/select";
 
 import axios from 'axios'
-import { EncryptPayload, ArmorValue } from "@/app/service/paste"
+import { EncryptPayload } from "@/app/service/paste"
+import { ArmorValue } from "@/app/service/armor"
 
 
 async function onSubmit(values) {

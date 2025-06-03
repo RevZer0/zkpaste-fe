@@ -13,6 +13,28 @@ import { Button } from '@/components/ui/button'
 import { DecryptPaste } from '@/app/service/paste'
 import { DearmorValue } from '@/app/service/armor'
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { Input } from "@/components/ui/input"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form"
 
 const PasteView = ({params}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
@@ -20,10 +42,19 @@ const PasteView = ({params}) => {
   const [decryptFailed, setDecryptFailed] = useState(false)
   const [pasteData, setPasteData] = useState(null)
   const { paste_id } = use(params)
+  const form = useForm({
+    defaultValues: {
+      password: ""
+    }
+  })
+
+  const unlockPaste = (values) => {
+    console.log(values)
+  }
   
   useEffect(() => {
     const fetchPasteData = async () => {
-      const response = await fetch(`http://localhost:8000/paste/${paste_id}`)
+    const response = await fetch(`http://localhost:8000/paste/${paste_id}`)
       if (response.status !== 200) {
         throw new Error("Paste not found message should be implemented in the future")
       }
@@ -66,7 +97,39 @@ const PasteView = ({params}) => {
     return (<h1>Loading...</h1>)
   }
   if (pasteData && pasteData.passwordProtected) {
-    return (<h1>This paste is password protected</h1>)
+    return (
+      <Dialog open={true}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(unlockPaste)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Password Required</DialogTitle>
+              <DialogDescription>
+                This share is protected with the password. Enter it to view the content.
+              </DialogDescription>
+            </DialogHeader>
+            <FormField
+              control={form.control}
+              name="password"
+              render={ ({field}) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder=""/>
+                  </FormControl>
+                </FormItem> 
+              )}
+            />
+            <DialogFooter className="sm:justify-start">
+                <Button type="button">
+                  Unlock Paste
+                </Button>
+            </DialogFooter>
+          </DialogContent>
+        </form>
+      </Form>
+    </Dialog>
+    )
   }
   if (pasteData && !plainText) {
     return (<h1>Decoding...</h1>)

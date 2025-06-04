@@ -41,6 +41,8 @@ const PasteView = ({params}) => {
   const [plainText, setPlainText] = useState(null)
   const [decryptFailed, setDecryptFailed] = useState(false)
   const [pasteData, setPasteData] = useState(null)
+  const [password, setPassword] = useState(null)
+  const [invalidPassword, setInvalidPassword] = useState(false)
   const { paste_id } = use(params)
   const form = useForm({
     defaultValues: {
@@ -49,46 +51,55 @@ const PasteView = ({params}) => {
   })
 
   const unlockPaste = (values) => {
-    console.log(values)
+    if (values.password) {
+      setPassword(values.password)
+    }
   }
   
-  useEffect(() => {
-    const fetchPasteData = async () => {
+  const fetchPasteData = async () => {
     const response = await fetch(`http://localhost:8000/paste/${paste_id}`)
-      if (response.status !== 200) {
-        throw new Error("Paste not found message should be implemented in the future")
-      }
-      const json = await response.json()
-      setPasteData({
-        iv: json.iv,
-        paste: json.paste,
-        passwordProtected: json.password_protected
-      })
+    if (response.status !== 200) {
+      throw new Error("Paste not found message should be implemented in the future")
     }
+    const json = await response.json()
+    setPasteData({
+      iv: json.iv,
+      paste: json.paste,
+      passwordProtected: json.password_protected
+    })
+  }
 
-    const decodeCipher = async () => {
-      try {
-        const plainText = await DecryptPaste(
-          DearmorValue(pasteData.paste), 
-          DearmorValue(window.location.hash.substring(1)),
-          DearmorValue(pasteData.iv),
-          null 
-        )
-        setPlainText(
-          String.fromCharCode(...plainText)
-        )
-      } catch (error) {
+  const decodeCipher = async () => {
+    try {  
+      const plainText = await DecryptPaste(
+        DearmorValue(pasteData.paste), 
+        DearmorValue(window.location.hash.substring(1)),
+        DearmorValue(pasteData.iv),
+        password 
+      )
+      setPlainText(
+        String.fromCharCode(...plainText)
+      )
+      setInvalidPassword(false)
+    } catch (error) {
+      if (password) {
+        setInvalidPassword(true)
+        setPassword(null)
+      } else {
         setDecryptFailed(true) 
       }
-    } 
+    }
+  } 
+
+  useEffect(() => {
     if (!pasteData) {
       fetchPasteData()
     }
-    if (pasteData && !pasteData.passwordProtected) {
+    if (pasteData && (!pasteData.passwordProtected || password )) {
       decodeCipher()
     }
     return () => {}
-  }, [pasteData])
+  }, [pasteData, password])
   
   if (decryptFailed) {
     return (<h1>Failed to decrypt the paste</h1>)
@@ -96,16 +107,16 @@ const PasteView = ({params}) => {
   if (!pasteData) {
     return (<h1>Loading...</h1>)
   }
-  if (pasteData && pasteData.passwordProtected) {
+  if (pasteData && pasteData.passwordProtected && !password) {
     return (
       <Dialog open={true}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(unlockPaste)}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <form className="space-y-4" onSubmit={form.handleSubmit(unlockPaste)}>
             <DialogHeader>
               <DialogTitle>Password Required</DialogTitle>
               <DialogDescription>
-                This share is protected with the password. Enter it to view the content.
+                This paste is protected with the password. Enter it to view the content.
               </DialogDescription>
             </DialogHeader>
             <FormField
@@ -115,18 +126,20 @@ const PasteView = ({params}) => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder=""/>
+                    <Input {...field} type="password" placeholder=""/>
                   </FormControl>
+                  {invalidPassword && <FormMessage>Invalid password. If you don't know the password you will not be able to decode paste content.</FormMessage>}
+
                 </FormItem> 
               )}
             />
             <DialogFooter className="sm:justify-start">
-                <Button type="button">
+                <Button type="submit">
                   Unlock Paste
                 </Button>
             </DialogFooter>
-          </DialogContent>
         </form>
+          </DialogContent>
       </Form>
     </Dialog>
     )

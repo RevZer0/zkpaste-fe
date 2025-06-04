@@ -69,6 +69,9 @@ export default function Home() {
               <FormControl>
                 <Textarea className="min-h-130 md:min-h-160" placeholder="Paste your content here" {... field}></Textarea>
               </FormControl>
+              <FormDescription>
+                This data will be encrypted locally before sending
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -79,7 +82,7 @@ export default function Home() {
             name="ttl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Expire after</FormLabel>
+                <FormLabel>Expires in</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -95,6 +98,9 @@ export default function Home() {
                     <SelectItem value="604800">1 week</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormDescription>
+                  Paste expires after this period
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -104,10 +110,13 @@ export default function Home() {
             name="opens"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Limit opens count</FormLabel>
+                <FormLabel>View limit</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="Enter max opens count" {... field}></Input>
                 </FormControl>
+                <FormDescription>
+                  Auto-delete after X views
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -121,6 +130,9 @@ export default function Home() {
                 <FormControl>
                   <Input type="password" placeholder="Enter password" {... field}></Input>
                 </FormControl>
+                <FormDescription>
+                  Use strong password for better protection
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

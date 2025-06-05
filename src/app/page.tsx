@@ -1,12 +1,13 @@
 "use client"
 
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ClipboardCopy, LockKeyhole, TriangleAlert} from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -30,23 +31,23 @@ import { EncryptPayload } from "@/app/service/paste"
 import { ArmorValue } from "@/app/service/armor"
 
 
-async function onSubmit(values) {
-  const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
-  const payload = {
-    iv: ArmorValue(iv),
-    ciphertext: ArmorValue(ciphertext),
-    signature: ArmorValue(signature),
-    metadata: {
-      password_protected: values.password.length > 0,
-      opens_count: parseInt(values.opens) || null,
-      ttl: parseInt(values.ttl) || 86400
-    }
-  }
-  const {data} = await axios.post('http://localhost:8000/paste', payload, {
-    headers: {'Content-type': 'application/json'}
-  });
-  console.log("View paste URL: http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
-}
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { 
+  Alert, 
+  AlertDescription, 
+  AlertTitle 
+} from "@/components/ui/alert"
+
 
 export default function Home() {
   const form = useForm({
@@ -57,7 +58,69 @@ export default function Home() {
       opens: "",
     }
   })
-  return (
+  const [successState, setSuccessState] = useState(false)
+  const [pasteUrl, setPasteUrl] = useState(null)
+
+  const onSubmit = async (values) => {
+    const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
+    const payload = {
+      iv: ArmorValue(iv),
+      ciphertext: ArmorValue(ciphertext),
+      signature: ArmorValue(signature),
+      metadata: {
+        password_protected: values.password.length > 0,
+        opens_count: parseInt(values.opens) || null,
+        ttl: parseInt(values.ttl) || 86400
+      }
+    }
+    const {data} = await axios.post('http://localhost:8000/paste', payload, {
+      headers: {'Content-type': 'application/json'}
+    });
+    setSuccessState(true)
+    setPasteUrl("http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
+    console.log("View paste URL: http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
+  }
+
+  return (<>
+    {successState && 
+      <Dialog open={true}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+              <div className="flex gap-2">
+                <LockKeyhole size={16} color="#00ff00" />
+                Paste Created Sucessfully
+              </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex gap-4 mt-6">
+              <Input value={pasteUrl} readOnly/>
+              <Button type="button" onClick={ () => {navigator.clipboard.writeText(pasteUrl)}}><ClipboardCopy /></Button>
+            </div>
+            <Alert className="mb-6">
+              <AlertTitle>
+                <div className="flex gap-2">
+                  <TriangleAlert size={16} />
+                  Important Security Notice
+                </div>
+              </AlertTitle>
+              <AlertDescription>
+                This URL contains your encryption key. Anyone with this link can read your paste. Share it securely and never post it publicly.
+              </AlertDescription>
+            </Alert>
+            <DialogFooter className="sm:justify-end">
+                <DialogClose>
+                  <Button type="button" variant="secondary">
+                    Close
+                  </Button>
+                </DialogClose>
+                <Button type="button">
+                  Create Another Paste
+                </Button>
+            </DialogFooter>
+          </DialogContent>
+      </Dialog>
+    }
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <FormField
@@ -139,9 +202,9 @@ export default function Home() {
           />
         </div>
         <div className="flex justify-start">
-          <Button className="w-full md:w-30">Paste!</Button>
+          <Button className="w-full md:w-40">Create Secure Paste</Button>
         </div>
       </form>
     </Form>
-  );
+  </>);
 }

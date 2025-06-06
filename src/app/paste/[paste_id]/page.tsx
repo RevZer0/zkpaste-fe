@@ -57,7 +57,7 @@ const PasteView = ({params}) => {
   }
   
   const fetchPasteData = async () => {
-    const response = await fetch(`http://localhost:8000/paste/${paste_id}`)
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}`)
     if (response.status !== 200) {
       throw new Error("Paste not found message should be implemented in the future")
     }

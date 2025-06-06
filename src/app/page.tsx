@@ -61,6 +61,10 @@ export default function Home() {
   const [successState, setSuccessState] = useState(false)
   const [pasteUrl, setPasteUrl] = useState(null)
 
+  const genPasteUrl = (paste_id, key) => {
+    return `${process.env.NEXT_PUBLIC_URL}/paste/${paste_id}#${ArmorValue(key)}`
+  }
+
   const onSubmit = async (values) => {
     const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
     const payload = {
@@ -73,12 +77,11 @@ export default function Home() {
         ttl: parseInt(values.ttl) || 86400
       }
     }
-    const {data} = await axios.post('http://localhost:8000/paste', payload, {
+    const {data} = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/paste`, payload, {
       headers: {'Content-type': 'application/json'}
     });
     setSuccessState(true)
-    setPasteUrl("http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
-    console.log("View paste URL: http://localhost:3000/paste/" + data.paste_id + "#" + ArmorValue(key))
+    setPasteUrl(genPasteUrl(data.paste_id, key))
   }
 
   return (<>
@@ -109,7 +112,7 @@ export default function Home() {
               </AlertDescription>
             </Alert>
             <DialogFooter className="sm:justify-end">
-                <DialogClose>
+                <DialogClose asChild>
                   <Button type="button" variant="secondary">
                     Close
                   </Button>

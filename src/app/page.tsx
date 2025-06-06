@@ -54,7 +54,7 @@ export default function Home() {
     defaultValues: {
       paste: "",
       password: "",
-      ttl: "",
+      ttl: "86400",
       opens: "",
     }
   })
@@ -84,14 +84,13 @@ export default function Home() {
     setPasteUrl(genPasteUrl(data.paste_id, key))
   }
 
-  return (<>
-    {successState && 
-      <Dialog open={true}>
+  return (<> 
+      <Dialog open={successState} onOpenChange={setSuccessState}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
               <div className="flex gap-2">
-                <LockKeyhole size={16} color="#00ff00" />
+                <LockKeyhole size={16} color="#10b981" />
                 Paste Created Sucessfully
               </div>
               </DialogTitle>
@@ -123,7 +122,6 @@ export default function Home() {
             </DialogFooter>
           </DialogContent>
       </Dialog>
-    }
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <FormField
@@ -131,13 +129,9 @@ export default function Home() {
           name="paste"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea className="min-h-130 md:min-h-160" placeholder="Paste your content here" {... field}></Textarea>
+                <Textarea className="min-h-130 md:min-h-160" placeholder="Paste your text, code, notes here..." {... field}></Textarea>
               </FormControl>
-              <FormDescription>
-                This data will be encrypted locally before sending
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -164,9 +158,6 @@ export default function Home() {
                     <SelectItem value="604800">1 week</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Paste expires after this period
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -180,9 +171,6 @@ export default function Home() {
                 <FormControl>
                   <Input type="number" placeholder="Enter max opens count" {... field}></Input>
                 </FormControl>
-                <FormDescription>
-                  Auto-delete after X views
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -192,20 +180,17 @@ export default function Home() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Protect with password</FormLabel>
+                <FormLabel>Password (optional)</FormLabel> 
                 <FormControl>
                   <Input type="password" placeholder="Enter password" {... field}></Input>
                 </FormControl>
-                <FormDescription>
-                  Use strong password for better protection
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
         <div className="flex justify-start">
-          <Button className="w-full md:w-40">Create Secure Paste</Button>
+          <Button className="w-full md:w-40">Create Paste</Button>
         </div>
       </form>
     </Form>

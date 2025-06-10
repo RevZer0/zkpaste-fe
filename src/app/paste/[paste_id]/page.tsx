@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/card'
 
 import { Button } from '@/components/ui/button'
-import { DecryptPaste } from '@/app/service/paste'
-import { DearmorValue } from '@/app/service/armor'
+import { DecryptPaste, ProofOfKnowlege } from '@/app/service/paste'
+import { DearmorValue, ArmorValue } from '@/app/service/armor'
 
 import {
   Dialog,
@@ -35,14 +35,17 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form"
+import { DeleteModal } from '@/components/DeleteModal'
 
 const PasteView = ({params}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
+  const [encryptionKey, setEncryptionKey] = useState(null)
   const [plainText, setPlainText] = useState(null)
   const [decryptFailed, setDecryptFailed] = useState(false)
   const [pasteData, setPasteData] = useState(null)
   const [password, setPassword] = useState(null)
   const [invalidPassword, setInvalidPassword] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const { paste_id } = use(params)
   const form = useForm({
     defaultValues: {
@@ -54,6 +57,33 @@ const PasteView = ({params}) => {
     if (values.password) {
       setPassword(values.password)
     }
+  }
+  const handleDelete = () => {
+    if (!deleteModalOpen) {
+      setDeleteModalOpen(true)
+    }
+  }
+
+  const deletePaste = async () => {
+    if (!plainText || !encryptionKey) {
+      throw new Error("Trying to delete unencrypted paste somehow.")
+    }
+    const signature = await ProofOfKnowlege(encryptionKey, plainText, password)
+    const payload = {
+      signature: ArmorValue(signature)
+    }
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}/delete`, {
+      method: 'POST',
+      headers: {
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    const data = await response.json()
+    
+    setPlainText(null)
+    setPasteData(null)
+    setDeleteModalOpen(false)
   }
   
   const fetchPasteData = async () => {
@@ -70,16 +100,18 @@ const PasteView = ({params}) => {
   }
 
   const decodeCipher = async () => {
+    const keyString = window.location.hash.substring(1)
     try {  
       const plainText = await DecryptPaste(
         DearmorValue(pasteData.paste), 
-        DearmorValue(window.location.hash.substring(1)),
+        DearmorValue(keyString),
         DearmorValue(pasteData.iv),
         password 
       )
       setPlainText(
         String.fromCharCode(...plainText)
       )
+      setEncryptionKey(DearmorValue(keyString))
       setInvalidPassword(false)
     } catch (error) {
       if (password) {
@@ -149,15 +181,18 @@ const PasteView = ({params}) => {
   }
 
   return (
-    <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-      <h2>Your paste</h2>
-      <Card>
-        <CardContent className="min-h-170 whitespace-pre-line">{plainText}</CardContent>
-      </Card>
-      <div className="flex justify-start">
-        <Button className="w-full md:w-30">Delete</Button>
+    <>
+      <DeleteModal open={deleteModalOpen} onOpenChange={setDeleteModalOpen} deleteHandler={deletePaste}/>
+      <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
+        <h2>Your paste</h2>
+        <Card>
+          <CardContent className="min-h-170 whitespace-pre-line">{plainText}</CardContent>
+        </Card>
+        <div className="flex justify-start">
+          <Button className="w-full md:w-30" onClick={handleDelete}>Delete</Button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

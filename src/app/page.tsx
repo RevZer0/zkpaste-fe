@@ -81,7 +81,6 @@ export default function Home() {
   }
 
   const onSubmit = async (values) => {
-    console.log(values)
     const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
     const payload = {
       iv: ArmorValue(iv),

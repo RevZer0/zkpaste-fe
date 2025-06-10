@@ -7,9 +7,12 @@ const EncryptPayload = async (plaintext: string, password: string) => {
   
   const iv = genAESInitVector()
   const baseKey = await genAESKey()
+  const keyView = await window.crypto.subtle.exportKey("raw", baseKey)
+  
   let encryptionKey = baseKey
+  
   if (password) {
-    encryptionKey = await deriveKeyFromPassword(baseKey, password)
+    encryptionKey = await deriveKeyFromPassword(keyView, password)
   }
   
   const ciphertext = await window.crypto.subtle.encrypt(
@@ -18,7 +21,6 @@ const EncryptPayload = async (plaintext: string, password: string) => {
     encoder.encode(plaintext)
   )
   const signature = await signPayload(encryptionKey, plaintext)
-  const keyView = await window.crypto.subtle.exportKey("raw", baseKey)
   return {
     iv: iv,
     ciphertext: new Uint8Array(ciphertext),
@@ -34,7 +36,7 @@ const DecryptPaste = async (
     "raw", key, {name: "AES-GCM"}, true, ["decrypt"]
   )
   if (password) {
-    encryptionKey = await deriveKeyFromPassword(encryptionKey, password)
+    encryptionKey = await deriveKeyFromPassword(key, password)
   }
   const plaintext = await window.crypto.subtle.decrypt(
     {name: "AES-GCM", iv}, encryptionKey, ciphertext
@@ -55,9 +57,8 @@ const genAESKey = async () => {
 }
 
 const deriveKeyFromPassword = async (baseKey, password) => {
-  const baseRaw = await window.crypto.subtle.exportKey("raw", baseKey);
   const ikm = await crypto.subtle.importKey(
-    "raw", baseRaw, "HKDF", false, ["deriveKey"]
+    "raw", baseKey, "HKDF", false, ["deriveKey"]
   )
 
   return await crypto.subtle.deriveKey({
@@ -84,8 +85,24 @@ const signPayload = async (encryptionKey, plaintext) => {
   return await window.crypto.subtle.sign("HMAC", signKey, encoder.encode(plaintext));
 }
 
+const ProofOfKnowlege = async (encryptionKey: Uint8Array, plaintext: string, password?: string): Uint8Array => {
+  if (password) {
+    const derivedKey = await deriveKeyFromPassword(encryptionKey, password)
+    encryptionKey = await window.crypto.subtle.exportKey("raw", derivedKey);
+  }
+
+  const signKey = await window.crypto.subtle.importKey(
+    "raw", encryptionKey, {
+      name:"HMAC",
+      hash: {name: "SHA-256"},
+    }, false, ["sign"]
+  )
+  const signature = await window.crypto.subtle.sign("HMAC", signKey, encoder.encode(plaintext));
+  return new Uint8Array(signature)
+}
 
 export {
   EncryptPayload,
-  DecryptPaste
+  DecryptPaste,
+  ProofOfKnowlege
 }

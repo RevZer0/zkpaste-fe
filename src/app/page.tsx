@@ -48,9 +48,24 @@ import {
   AlertTitle 
 } from "@/components/ui/alert"
 
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
 
 export default function Home() {
+  const formSchema = z.object({
+    paste: z.string().min(1, {
+      message: "I'm not against encrypting emptyness, but why?"
+    }).max(128 * 1024, {
+      message: "I think it is too much for the paste."
+    }),
+    password: z.string(),
+    ttl: z.string(),
+    opens: z.string()
+  })
+
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       paste: "",
       password: "",
@@ -66,6 +81,7 @@ export default function Home() {
   }
 
   const onSubmit = async (values) => {
+    console.log(values)
     const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
     const payload = {
       iv: ArmorValue(iv),

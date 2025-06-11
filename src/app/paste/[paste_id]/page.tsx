@@ -99,6 +99,23 @@ const PasteView = ({params}) => {
     })
   }
 
+  const updateViewCount = async() => {
+    if (!plainText || !encryptionKey) {
+      throw new Error("Trying to update view count of unencrypted paste somehow.")
+    }
+    const signature = await ProofOfKnowlege(encryptionKey, plainText, password)
+    const payload = {
+      signature: ArmorValue(signature)
+    }
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}/view`, {
+      method: 'PUT',
+      headers: {
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+  }
+
   const decodeCipher = async () => {
     const keyString = window.location.hash.substring(1)
     try {  
@@ -127,11 +144,14 @@ const PasteView = ({params}) => {
     if (!pasteData) {
       fetchPasteData()
     }
-    if (pasteData && (!pasteData.passwordProtected || password )) {
+    if (!plainText && pasteData && (!pasteData.passwordProtected || password )) {
       decodeCipher()
     }
+    if (plainText) {
+      updateViewCount()
+    }
     return () => {}
-  }, [pasteData, password])
+  }, [pasteData, password, plainText])
   
   if (decryptFailed) {
     return (<h1>Failed to decrypt the paste</h1>)

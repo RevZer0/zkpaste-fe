@@ -90,7 +90,6 @@ const ProofOfKnowlege = async (encryptionKey: Uint8Array, plaintext: string, pas
     const derivedKey = await deriveKeyFromPassword(encryptionKey, password)
     encryptionKey = await window.crypto.subtle.exportKey("raw", derivedKey);
   }
-
   const signKey = await window.crypto.subtle.importKey(
     "raw", encryptionKey, {
       name:"HMAC",

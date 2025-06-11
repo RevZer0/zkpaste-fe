@@ -34,8 +34,9 @@ export default function RootLayout({
             <div className="flex justify-between w-full max-w-6xl">
             <h2 className="text-2xl pl-4 text-semibold"><Link href="/">ZK.paste</Link></h2>
             <div className="flex justify-end">
-              <Button variant="link">How it works</Button>
-              <Button variant="link">Contact</Button>
+              <Link href="/about">
+                <Button variant="link">How it works</Button>
+              </Link>
             </div>
             </div>
           </header>
@@ -46,3 +47,4 @@ export default function RootLayout({
     </html>
   );
 }
+

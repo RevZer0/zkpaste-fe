@@ -231,7 +231,7 @@ const PasteView = ({params}) => {
     <>
       <DeleteModal open={deleteModalOpen} onOpenChange={setDeleteModalOpen} deleteHandler={deletePaste}/>
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-        <h2>Your paste</h2>
+        <h2 className="text-2xl text-semibold">Your paste</h2>
         <Card>
           <CardContent className="min-h-170 whitespace-pre-line">{plainText}</CardContent>
         </Card>

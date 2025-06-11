@@ -5,6 +5,9 @@ import {
   CardFooter
 } from '@/components/ui/card'
 
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+
 export default function About() {
   return (
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
@@ -20,6 +23,10 @@ export default function About() {
             <p className="mt-2">To delete a paste, you prove ownership by decrypting the content and providing an HMAC signature. No accounts, passwords, or server-side secrets required.</p>
             <p className="text-xl text-semibold mt-4">Automatic expiration</p>
             <p className="mt-2">Pastes automatically expire based on time limits or view counts you set. Once expired, they're permanently wiped from our servers with no recovery possible.</p>
+
+            <Link href="/">
+              <Button type="button" className="mt-12">Create Paste</Button>
+            </Link>
       </div>
   )
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,7 +33,10 @@ export default function RootLayout({
         <div className="flex flex-col min-h-screen w-full">
           <header className="flex justify-center p-2 bg-background">
             <div className="flex justify-between w-full max-w-6xl">
-            <h2 className="text-2xl pl-4 text-semibold"><Link href="/">ZK.paste</Link></h2>
+            <div className="pl-4">
+            <h2 className="text-3xl text-semibold"><Link href="/">ZK.paste</Link></h2> 
+            <p className="text-sm text-muted-foreground">Zero Knowlege pastebin service</p>
+            </div>
             <div className="flex justify-end">
               <Link href="/about">
                 <Button variant="link">How it works</Button>

@@ -167,9 +167,9 @@ const PasteView = ({params}) => {
   }
   if (pasteNotFound) {
     return (
-      <Alert className="max-w-2xl max-h-65">
-        <AlertTitle className="text-2xl">Your paste is gone.</AlertTitle>
-        <AlertDescription>
+      <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
+        <h2 className="text-2xl text-sembold mb-12">Your paste is gone.</h2>
+        <div>
           <h1>It may have:</h1>
           <ul className="list-disc [&>li]:mt-2 px-6">
             <li>Reached its expiration time</li>
@@ -177,11 +177,11 @@ const PasteView = ({params}) => {
             <li>Been manually deleted</li>
             <li>Never existed at all</li>
           </ul>
-          <Link href="/" className="mt-4">
-            <Button>Create Paste</Button>
+          <Link href="/">
+            <Button className="mt-12">Create Paste</Button>
           </Link>
-        </AlertDescription>
-      </Alert>
+        </div>
+      </div>
     )
   }
   if (!pasteData) {
@@ -231,7 +231,6 @@ const PasteView = ({params}) => {
     <>
       <DeleteModal open={deleteModalOpen} onOpenChange={setDeleteModalOpen} deleteHandler={deletePaste}/>
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-        <h2 className="text-2xl text-semibold">Your paste</h2>
         <Card>
           <CardContent className="min-h-170 whitespace-pre-line">{plainText}</CardContent>
         </Card>

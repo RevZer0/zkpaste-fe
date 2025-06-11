@@ -36,6 +36,13 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form"
 import { DeleteModal } from '@/components/DeleteModal'
+import { 
+  Alert, 
+  AlertDescription, 
+  AlertTitle 
+} from "@/components/ui/alert"
+
+import Link from 'next/link'
 
 const PasteView = ({params}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
@@ -46,6 +53,7 @@ const PasteView = ({params}) => {
   const [password, setPassword] = useState(null)
   const [invalidPassword, setInvalidPassword] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [pasteNotFound, setPasteNotFound] = useState(false)
   const { paste_id } = use(params)
   const form = useForm({
     defaultValues: {
@@ -89,7 +97,8 @@ const PasteView = ({params}) => {
   const fetchPasteData = async () => {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}`)
     if (response.status !== 200) {
-      throw new Error("Paste not found message should be implemented in the future")
+      setPasteNotFound(true)
+      return
     }
     const json = await response.json()
     setPasteData({
@@ -156,6 +165,25 @@ const PasteView = ({params}) => {
   if (decryptFailed) {
     return (<h1>Failed to decrypt the paste</h1>)
   }
+  if (pasteNotFound) {
+    return (
+      <Alert className="max-w-2xl max-h-65">
+        <AlertTitle className="text-2xl">Your paste is gone.</AlertTitle>
+        <AlertDescription>
+          <h1>It may have:</h1>
+          <ul className="list-disc [&>li]:mt-2 px-6">
+            <li>Reached its expiration time</li>
+            <li>Exceeded the view limit</li>
+            <li>Been manually deleted</li>
+            <li>Never existed at all</li>
+          </ul>
+          <Link href="/" className="mt-4">
+            <Button>Create Paste</Button>
+          </Link>
+        </AlertDescription>
+      </Alert>
+    )
+  }
   if (!pasteData) {
     return (<h1>Loading...</h1>)
   }
@@ -199,7 +227,6 @@ const PasteView = ({params}) => {
   if (pasteData && !plainText) {
     return (<h1>Decoding...</h1>)
   }
-
   return (
     <>
       <DeleteModal open={deleteModalOpen} onOpenChange={setDeleteModalOpen} deleteHandler={deletePaste}/>

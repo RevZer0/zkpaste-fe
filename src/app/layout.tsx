@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Button } from "@/components/ui/button"
+import Link from 'next/link'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
         <div className="flex flex-col min-h-screen w-full">
           <header className="flex justify-center p-2 bg-background">
             <div className="flex justify-between w-full max-w-6xl">
-            <h2 className="text-2xl pl-4">ZK.paste</h2>
+            <h2 className="text-2xl pl-4 text-semibold"><Link href="/">ZK.paste</Link></h2>
             <div className="flex justify-end">
               <Button variant="link">How it works</Button>
               <Button variant="link">Contact</Button>

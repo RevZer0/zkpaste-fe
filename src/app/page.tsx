@@ -50,6 +50,7 @@ import {
 
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import Link from 'next/link'
 
 
 export default function Home() {
@@ -125,16 +126,6 @@ export default function Home() {
                 This URL contains your encryption key. Anyone with this link can read your paste. Share it securely and never post it publicly.
               </AlertDescription>
             </Alert>
-            <DialogFooter className="sm:justify-end">
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary">
-                    Close
-                  </Button>
-                </DialogClose>
-                <Button type="button">
-                  Create Another Paste
-                </Button>
-            </DialogFooter>
           </DialogContent>
       </Dialog>
     <Form {...form}>

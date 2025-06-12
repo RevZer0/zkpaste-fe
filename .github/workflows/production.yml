@@ -43,7 +43,7 @@ jobs:
           name: production-build
           path: build.tar.gz
 
-  deploy_dev:
+  deploy_production:
     needs: [build]
     runs-on: ubuntu-latest
     environment: PRODUCTION

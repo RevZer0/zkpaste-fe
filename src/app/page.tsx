@@ -75,13 +75,13 @@ export default function Home() {
     }
   })
   const [successState, setSuccessState] = useState(false)
-  const [pasteUrl, setPasteUrl] = useState(null)
+  const [pasteUrl, setPasteUrl] = useState("")
 
-  const genPasteUrl = (paste_id, key) => {
+  const genPasteUrl = (paste_id: string, key: Uint8Array) => {
     return `${process.env.NEXT_PUBLIC_URL}/paste/${paste_id}#${ArmorValue(key)}`
   }
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const {iv, ciphertext, signature, key} = await EncryptPayload(values.paste, values.password)
     const payload = {
       iv: ArmorValue(iv),

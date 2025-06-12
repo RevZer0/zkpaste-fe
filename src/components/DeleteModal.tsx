@@ -11,7 +11,10 @@ import {
 
 import { Button } from "@/components/ui/button"
 
-
+interface DeletePasteHandler {
+    (): void
+}
+//@ts-ignore
 const DeleteModal = ({deleteHandler, ...props}) => {
   return (
       <Dialog {...props}>

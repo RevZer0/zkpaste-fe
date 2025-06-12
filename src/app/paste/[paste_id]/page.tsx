@@ -44,24 +44,34 @@ import {
 
 import Link from 'next/link'
 
-const PasteView = ({params}) => {
+interface PasswordFormInput {
+    password: string
+}
+
+interface PasteData {
+    iv: string
+    paste: string
+    passwordProtected: boolean
+}
+
+const PasteView = ({params}: {params: Promise<{paste_id: string}>}) => {
   const [passwordProtected, setPasswordProtected] = useState(false)
-  const [encryptionKey, setEncryptionKey] = useState(null)
-  const [plainText, setPlainText] = useState(null)
+  const [encryptionKey, setEncryptionKey] = useState<Uint8Array | null>(null)
+  const [plainText, setPlainText] = useState<string | null>(null)
   const [decryptFailed, setDecryptFailed] = useState(false)
-  const [pasteData, setPasteData] = useState(null)
-  const [password, setPassword] = useState(null)
+  const [pasteData, setPasteData] = useState<PasteData | null>(null)
+  const [password, setPassword] = useState<string | null>(null)
   const [invalidPassword, setInvalidPassword] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [pasteNotFound, setPasteNotFound] = useState(false)
   const { paste_id } = use(params)
-  const form = useForm({
+  const form = useForm<PasswordFormInput>({
     defaultValues: {
       password: ""
     }
   })
 
-  const unlockPaste = (values) => {
+  const unlockPaste = (values: PasswordFormInput) => {
     if (values.password) {
       setPassword(values.password)
     }
@@ -127,26 +137,29 @@ const PasteView = ({params}) => {
 
   const decodeCipher = async () => {
     const keyString = window.location.hash.substring(1)
-    try {  
-      const plainText = await DecryptPaste(
-        DearmorValue(pasteData.paste), 
-        DearmorValue(keyString),
-        DearmorValue(pasteData.iv),
-        password 
-      )
-      setPlainText(
-        String.fromCharCode(...plainText)
-      )
-      setEncryptionKey(DearmorValue(keyString))
-      setInvalidPassword(false)
-    } catch (error) {
-      if (password) {
-        setInvalidPassword(true)
-        setPassword(null)
-      } else {
-        setDecryptFailed(true) 
-      }
+    if (pasteData !== null) {
+        try {  
+          const plainText = await DecryptPaste(
+            DearmorValue(pasteData.paste), 
+            DearmorValue(keyString),
+            DearmorValue(pasteData.iv),
+            password 
+          )
+          setPlainText(
+            String.fromCharCode(...plainText)
+          )
+          setEncryptionKey(DearmorValue(keyString))
+          setInvalidPassword(false)
+        } catch (error) {
+          if (password) {
+            setInvalidPassword(true)
+            setPassword(null)
+          } else {
+            setDecryptFailed(true) 
+          }
+        }
     }
+
   } 
 
   useEffect(() => {

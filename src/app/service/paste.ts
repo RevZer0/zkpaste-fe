@@ -30,8 +30,8 @@ const EncryptPayload = async (plaintext: string, password: string) => {
 }
 
 const DecryptPaste = async (
-  ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, password: string
-): Uint8Array => {
+  ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, password: string | null
+): Promise<Uint8Array> => {
   let encryptionKey = await window.crypto.subtle.importKey(
     "raw", key, {name: "AES-GCM"}, true, ["decrypt"]
   )
@@ -56,7 +56,7 @@ const genAESKey = async () => {
   )
 }
 
-const deriveKeyFromPassword = async (baseKey, password) => {
+const deriveKeyFromPassword = async (baseKey: ArrayBuffer | Uint8Array, password: string) => {
   const ikm = await crypto.subtle.importKey(
     "raw", baseKey, "HKDF", false, ["deriveKey"]
   )
@@ -74,7 +74,7 @@ const deriveKeyFromPassword = async (baseKey, password) => {
   )
 }
 
-const signPayload = async (encryptionKey, plaintext) => {
+const signPayload = async (encryptionKey: CryptoKey, plaintext: string) => {
   const keyRaw = await window.crypto.subtle.exportKey("raw", encryptionKey);
   const signKey = await window.crypto.subtle.importKey(
     "raw", keyRaw, {
@@ -85,7 +85,7 @@ const signPayload = async (encryptionKey, plaintext) => {
   return await window.crypto.subtle.sign("HMAC", signKey, encoder.encode(plaintext));
 }
 
-const ProofOfKnowlege = async (encryptionKey: Uint8Array, plaintext: string, password?: string): Uint8Array => {
+const ProofOfKnowlege = async (encryptionKey: Uint8Array | ArrayBuffer, plaintext: string, password: string | null): Promise<Uint8Array> => {
   if (password) {
     const derivedKey = await deriveKeyFromPassword(encryptionKey, password)
     encryptionKey = await window.crypto.subtle.exportKey("raw", derivedKey);

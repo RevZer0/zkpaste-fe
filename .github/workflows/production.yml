@@ -1,0 +1,66 @@
+name: Deploy to the PRODUCTION
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: PRODUCTION
+
+    steps:
+      - name: Fetch codebase
+        uses: actions/checkout@v4
+      - name: Prepare config
+        run: |
+          echo '${{ vars.ENV }}' > .env
+      - name: Build production ready application
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - run: npm install
+      - run: npm run build
+      - name: prepare standalone build
+        run: |
+          mkdir build
+          cp .env build
+          cp -r .next build
+          cp -r public build
+          cp -r .next/static build
+          cp -r .next/standalone/* build
+      - name: compress build files
+        run: tar -czf build.tar.gz build
+
+      - name: Store build
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: build.tar.gz
+
+  deploy_dev:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: PRODUCTION
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-build
+      - name: unpack build
+        run: tar -xzf build.tar.gz
+      - name: push code to server
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          rsync -a --chmod=D2775,F664 "$GITHUB_WORKSPACE"/build/ ${{ secrets.USER }}@${{ secrets.HOST }}:${{ vars.DEPLOYMENT_PATH }}
+          
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "/usr/bin/pm2 restart zkpaste"

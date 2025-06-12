@@ -63,4 +63,4 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
           rsync -a --chmod=D2775,F664 "$GITHUB_WORKSPACE"/build/ ${{ secrets.USER }}@${{ secrets.HOST }}:${{ vars.DEPLOYMENT_PATH }}
           
-          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "/usr/bin/pm2 restart zkpaste"
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} "pm2 restart zkpaste"

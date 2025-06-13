@@ -245,7 +245,7 @@ const PasteView = ({params}: {params: Promise<{paste_id: string}>}) => {
       <DeleteModal open={deleteModalOpen} onOpenChange={setDeleteModalOpen} deleteHandler={deletePaste}/>
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <Card>
-          <CardContent className="min-h-170 whitespace-pre-line">{plainText}</CardContent>
+          <CardContent className="min-h-170 whitespace-pre">{plainText}</CardContent>
         </Card>
         <div className="flex justify-start">
           <Button className="w-full md:w-30" onClick={handleDelete}>Delete</Button>

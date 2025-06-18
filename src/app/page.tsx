@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, LockKeyhole, TriangleAlert } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -23,22 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import axios from "axios";
 import { EncryptPayload } from "@/app/service/paste";
 import { ArmorValue } from "@/app/service/armor";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createPasteHandler } from "@/handlers/paste/create";
+import { PasteCreatedDialog } from "@/components/PasteCreatedDialog";
 
 export default function Home() {
   const formSchema = z.object({
@@ -94,41 +84,11 @@ export default function Home() {
 
   return (
     <>
-      <Dialog open={successState} onOpenChange={setSuccessState}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              <div className="flex gap-2">
-                <LockKeyhole size={16} color="#10b981" />
-                Paste Created Sucessfully
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex gap-4 mt-6">
-            <Input value={pasteUrl} readOnly />
-            <Button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(pasteUrl);
-              }}
-            >
-              <ClipboardCopy />
-            </Button>
-          </div>
-          <Alert className="mb-6">
-            <AlertTitle>
-              <div className="flex gap-2">
-                <TriangleAlert size={16} />
-                Important Security Notice
-              </div>
-            </AlertTitle>
-            <AlertDescription>
-              This URL contains your encryption key. Anyone with this link can
-              read your paste. Share it securely and never post it publicly.
-            </AlertDescription>
-          </Alert>
-        </DialogContent>
-      </Dialog>
+      <PasteCreatedDialog
+        isOpen={successState}
+        isOpenHandler={setSuccessState}
+        pasteUrl={pasteUrl}
+      />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

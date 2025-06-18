@@ -1,7 +1,7 @@
 "use client";
 
-import { PasteCreatedDialog } from "@/components/PasteCreatedDialog";
-import { PasteCreateForm } from "@/components/PasteCreateForm";
+import { PasteCreatedDialog } from "@/components/create_form/PasteCreatedDialog";
+import { PasteCreateForm } from "@/components/create_form/PasteCreateForm";
 
 export default function Home() {
   return (

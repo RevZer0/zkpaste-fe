@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePasteStore } from "@/stores/paste";
 
-const PasteCreatedDialog = () => {
+export const PasteCreatedDialog = () => {
   const isOpen = usePasteStore((state) => state.successDialogOpen);
   const isOpenHandler = usePasteStore((state) => state.successDialogToggle);
   const pasteUrl = usePasteStore((state) => state.pasteUrl);
@@ -51,5 +51,3 @@ const PasteCreatedDialog = () => {
     </Dialog>
   );
 };
-
-export { PasteCreatedDialog };

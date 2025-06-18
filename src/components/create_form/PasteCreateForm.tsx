@@ -25,7 +25,7 @@ import { createPasteHandler } from "@/handlers/paste/create";
 import { EncryptPayload } from "@/app/service/paste";
 import { usePasteStore } from "@/stores/paste";
 
-const PasteCreateForm = () => {
+export const PasteCreateForm = () => {
   const onSuccessCallback = usePasteStore(
     (store) => store.pasteCreatedCallback,
   );
@@ -169,5 +169,3 @@ const PasteCreateForm = () => {
     </Form>
   );
 };
-
-export { PasteCreateForm };

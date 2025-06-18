@@ -33,6 +33,7 @@ import Link from "next/link";
 import { getPasteHandler } from "@/handlers/paste/get";
 import { deletePasteHandler } from "@/handlers/paste/delete";
 import { updateViewCountHandler } from "@/handlers/paste/udpate_view";
+import { PasteNotFound } from "@/components/view_paste/PasteNotFound";
 
 interface PasswordFormInput {
   password: string;
@@ -84,7 +85,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
       setPlainText(null);
       setPasteData(null);
       setDeleteModalOpen(false);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchPasteData = async () => {
@@ -112,7 +113,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
         paste_id: paste_id,
         signature: ArmorValue(signature),
       });
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const decodeCipher = async () => {
@@ -149,30 +150,14 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
     if (plainText) {
       updateViewCount();
     }
-    return () => {};
+    return () => { };
   }, [pasteData, password, plainText]);
 
   if (decryptFailed) {
     return <h1>Failed to decrypt the paste</h1>;
   }
   if (pasteNotFound) {
-    return (
-      <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-        <h2 className="text-2xl text-sembold mb-12">Your paste is gone.</h2>
-        <div>
-          <h1>It may have:</h1>
-          <ul className="list-disc [&>li]:mt-2 px-6">
-            <li>Reached its expiration time</li>
-            <li>Exceeded the view limit</li>
-            <li>Been manually deleted</li>
-            <li>Never existed at all</li>
-          </ul>
-          <Link href="/">
-            <Button className="mt-12">Create Paste</Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <PasteNotFound />;
   }
   if (!pasteData) {
     return <h1>Loading...</h1>;

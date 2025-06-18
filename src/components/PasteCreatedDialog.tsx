@@ -8,20 +8,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dispatch, SetStateAction } from "react";
+import { usePasteStore } from "@/stores/paste";
 
-interface PasteCreateDialogProps {
-  isOpen: boolean;
-  pasteUrl: string;
-  isOpenHandler: Dispatch<SetStateAction<boolean>>;
-}
-
-const PasteCreatedDialog = ({ ...props }: PasteCreateDialogProps) => {
+const PasteCreatedDialog = () => {
+  const isOpen = usePasteStore((state) => state.successDialogOpen);
+  const isOpenHandler = usePasteStore((state) => state.successDialogToggle);
+  const pasteUrl = usePasteStore((state) => state.pasteUrl);
   const copyUrlToClipboard = () => {
-    navigator.clipboard.writeText(props.pasteUrl);
+    navigator.clipboard.writeText(pasteUrl);
   };
+
   return (
-    <Dialog open={props.isOpen} onOpenChange={props.isOpenHandler}>
+    <Dialog open={isOpen} onOpenChange={isOpenHandler}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -32,7 +30,7 @@ const PasteCreatedDialog = ({ ...props }: PasteCreateDialogProps) => {
           </DialogTitle>
         </DialogHeader>
         <div className="flex gap-4 mt-6">
-          <Input value={props.pasteUrl} readOnly />
+          <Input value={pasteUrl} readOnly />
           <Button type="button" onClick={copyUrlToClipboard}>
             <ClipboardCopy />
           </Button>

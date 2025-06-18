@@ -31,6 +31,8 @@ import { DeleteModal } from "@/components/DeleteModal";
 
 import Link from "next/link";
 import { getPasteHandler } from "@/handlers/paste/get";
+import { deletePasteHandler } from "@/handlers/paste/delete";
+import { updateViewCountHandler } from "@/handlers/paste/udpate_view";
 
 interface PasswordFormInput {
   password: string;
@@ -74,24 +76,15 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
       throw new Error("Trying to delete unencrypted paste somehow.");
     }
     const signature = await ProofOfKnowlege(encryptionKey, plainText, password);
-    const payload = {
-      signature: ArmorValue(signature),
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}/delete`,
-      {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      },
-    );
-    const data = await response.json();
-
-    setPlainText(null);
-    setPasteData(null);
-    setDeleteModalOpen(false);
+    try {
+      await deletePasteHandler({
+        paste_id: paste_id,
+        signature: ArmorValue(signature),
+      });
+      setPlainText(null);
+      setPasteData(null);
+      setDeleteModalOpen(false);
+    } catch (e) {}
   };
 
   const fetchPasteData = async () => {
@@ -114,19 +107,12 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
       );
     }
     const signature = await ProofOfKnowlege(encryptionKey, plainText, password);
-    const payload = {
-      signature: ArmorValue(signature),
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/paste/${paste_id}/view`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      },
-    );
+    try {
+      await updateViewCountHandler({
+        paste_id: paste_id,
+        signature: ArmorValue(signature),
+      });
+    } catch (e) {}
   };
 
   const decodeCipher = async () => {

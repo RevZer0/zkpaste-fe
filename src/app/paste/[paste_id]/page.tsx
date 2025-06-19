@@ -11,7 +11,6 @@ import { DearmorValue, ArmorValue } from "@/app/service/armor";
 import { DeleteModal } from "@/components/DeleteModal";
 
 import { getPasteHandler } from "@/handlers/paste/get";
-import { deletePasteHandler } from "@/handlers/paste/delete";
 import { updateViewCountHandler } from "@/handlers/paste/udpate_view";
 import { PasteNotFound } from "@/components/view_paste/PasteNotFound";
 import { EnterPasswordDialog } from "@/components/view_paste/EnterPasswordDialog";
@@ -24,7 +23,10 @@ import {
 const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
   const { paste_id } = use(params);
 
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const password = usePasteViewStore((state) => state.password);
+  const encryptionKey = usePasteViewStore((state) => state.encryptionKey);
+  const pasteData = usePasteViewStore((state) => state.pasteData);
+  const plainText = usePasteViewStore((state) => state.plainText);
 
   const loadState = usePasteViewStore((state) => state.loadState);
   const loadSuccess = usePasteViewStore((state) => state.loadSuccess);
@@ -37,33 +39,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
     (state) => state.decryptionPasswordRequired,
   );
 
-  const reset = usePasteViewStore((state) => state.reset);
-
-  const password = usePasteViewStore((state) => state.password);
-  const encryptionKey = usePasteViewStore((state) => state.encryptionKey);
-  const pasteData = usePasteViewStore((state) => state.pasteData);
-  const plainText = usePasteViewStore((state) => state.plainText);
-
-  const handleDelete = () => {
-    if (!deleteModalOpen) {
-      setDeleteModalOpen(true);
-    }
-  };
-
-  const deletePaste = async () => {
-    if (!encryptionKey || !plainText) {
-      return;
-    }
-    const signature = await ProofOfKnowlege(encryptionKey, plainText, password);
-    try {
-      await deletePasteHandler({
-        paste_id: paste_id,
-        signature: ArmorValue(signature),
-      });
-      reset();
-      setDeleteModalOpen(false);
-    } catch (e) { }
-  };
+  const toggleDelete = usePasteViewStore((state) => state.toggleDelete);
 
   const updateViewCount = async () => {
     if (!encryptionKey || !plainText) {
@@ -75,13 +51,14 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
         paste_id: paste_id,
         signature: ArmorValue(signature),
       });
-    } catch (e) { }
+    } catch (e) {}
   };
 
   const fetchPasteData = async () => {
     try {
       const data = await getPasteHandler({ paste_id: paste_id });
       loadSuccess({
+        pasteId: paste_id,
         iv: data.iv,
         paste: data.paste,
         passwordProtected: data.password_protected,
@@ -126,7 +103,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
     if (decryptState == PasteDecryptionState.SUCCESS) {
       updateViewCount();
     }
-    return () => { };
+    return () => {};
   }, [loadState, decryptState]);
 
   if (
@@ -153,17 +130,13 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
           </CardContent>
         </Card>
         <div className="flex justify-start">
-          <Button className="w-full md:w-30" onClick={handleDelete}>
+          <Button className="w-full md:w-30" onClick={toggleDelete}>
             Delete
           </Button>
         </div>
       </div>
       <EnterPasswordDialog />
-      <DeleteModal
-        open={deleteModalOpen}
-        onOpenChange={setDeleteModalOpen}
-        deleteHandler={deletePaste}
-      />
+      <DeleteModal />
     </>
   );
 };

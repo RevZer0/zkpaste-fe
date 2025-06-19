@@ -26,7 +26,13 @@ enum PasswordState {
   INVALID,
 }
 
+enum DeleteState {
+  OPEN,
+  CLOSE,
+}
+
 interface PasteData {
+  pasteId: string;
   iv: string;
   paste: string;
   passwordProtected: boolean;
@@ -36,6 +42,7 @@ interface PasteViewState {
   loadState: PasteLoadState;
   decryptState: PasteDecryptionState;
   passwordState: PasswordState;
+  deleteState: DeleteState;
 
   password: string;
   pasteData?: PasteData;
@@ -52,6 +59,7 @@ interface PasteViewState {
   decryptionPasswordRequired: () => void;
 
   passwordSet: (password: string) => void;
+  toggleDelete: () => void;
 }
 
 const usePasteStore = create<PasteCreateState>()((set) => ({
@@ -70,6 +78,7 @@ const usePasteViewStore = create<PasteViewState>()((set) => ({
   loadState: PasteLoadState.PENDING,
   decryptState: PasteDecryptionState.PENDING,
   passwordState: PasswordState.UNSET,
+  deleteState: DeleteState.CLOSE,
 
   password: "",
   pasteData: undefined,
@@ -118,6 +127,13 @@ const usePasteViewStore = create<PasteViewState>()((set) => ({
       password: password,
       decryptState: PasteDecryptionState.PENDING,
     })),
+  toggleDelete: () =>
+    set((state) => ({
+      deleteState:
+        state.deleteState == DeleteState.CLOSE
+          ? DeleteState.OPEN
+          : DeleteState.CLOSE,
+    })),
 }));
 
 export {
@@ -126,4 +142,5 @@ export {
   PasteLoadState,
   PasteDecryptionState,
   PasswordState,
+  DeleteState,
 };

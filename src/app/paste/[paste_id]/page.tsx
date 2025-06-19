@@ -8,103 +8,42 @@ import { Button } from "@/components/ui/button";
 import { DecryptPaste, ProofOfKnowlege } from "@/app/service/paste";
 import { DearmorValue, ArmorValue } from "@/app/service/armor";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { DeleteModal } from "@/components/DeleteModal";
 
-import Link from "next/link";
 import { getPasteHandler } from "@/handlers/paste/get";
-import { deletePasteHandler } from "@/handlers/paste/delete";
 import { updateViewCountHandler } from "@/handlers/paste/udpate_view";
-
-interface PasswordFormInput {
-  password: string;
-}
-
-interface PasteData {
-  iv: string;
-  paste: string;
-  passwordProtected: boolean;
-}
+import { PasteNotFound } from "@/components/view_paste/PasteNotFound";
+import { EnterPasswordDialog } from "@/components/view_paste/EnterPasswordDialog";
+import {
+  PasteDecryptionState,
+  PasteLoadState,
+  usePasteViewStore,
+} from "@/stores/paste";
 
 const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
-  const [encryptionKey, setEncryptionKey] = useState<Uint8Array | null>(null);
-  const [plainText, setPlainText] = useState<string | null>(null);
-  const [decryptFailed, setDecryptFailed] = useState(false);
-  const [pasteData, setPasteData] = useState<PasteData | null>(null);
-  const [password, setPassword] = useState<string | null>(null);
-  const [invalidPassword, setInvalidPassword] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [pasteNotFound, setPasteNotFound] = useState(false);
   const { paste_id } = use(params);
-  const form = useForm<PasswordFormInput>({
-    defaultValues: {
-      password: "",
-    },
-  });
 
-  const unlockPaste = (values: PasswordFormInput) => {
-    if (values.password) {
-      setPassword(values.password);
-    }
-  };
-  const handleDelete = () => {
-    if (!deleteModalOpen) {
-      setDeleteModalOpen(true);
-    }
-  };
+  const password = usePasteViewStore((state) => state.password);
+  const encryptionKey = usePasteViewStore((state) => state.encryptionKey);
+  const pasteData = usePasteViewStore((state) => state.pasteData);
+  const plainText = usePasteViewStore((state) => state.plainText);
 
-  const deletePaste = async () => {
-    if (!plainText || !encryptionKey) {
-      throw new Error("Trying to delete unencrypted paste somehow.");
-    }
-    const signature = await ProofOfKnowlege(encryptionKey, plainText, password);
-    try {
-      await deletePasteHandler({
-        paste_id: paste_id,
-        signature: ArmorValue(signature),
-      });
-      setPlainText(null);
-      setPasteData(null);
-      setDeleteModalOpen(false);
-    } catch (e) {}
-  };
+  const loadState = usePasteViewStore((state) => state.loadState);
+  const loadSuccess = usePasteViewStore((state) => state.loadSuccess);
+  const loadFailed = usePasteViewStore((state) => state.loadFailed);
 
-  const fetchPasteData = async () => {
-    try {
-      const paste_data = await getPasteHandler({ paste_id: paste_id });
-      setPasteData({
-        iv: paste_data.iv,
-        paste: paste_data.paste,
-        passwordProtected: paste_data.password_protected,
-      });
-    } catch (e) {
-      setPasteNotFound(true);
-    }
-  };
+  const decryptState = usePasteViewStore((state) => state.decryptState);
+  const decryptSuccess = usePasteViewStore((state) => state.decryptionSuccess);
+  const decryptFailed = usePasteViewStore((state) => state.decryptionFailed);
+  const decryptPasswordRequired = usePasteViewStore(
+    (state) => state.decryptionPasswordRequired,
+  );
+
+  const toggleDelete = usePasteViewStore((state) => state.toggleDelete);
 
   const updateViewCount = async () => {
-    if (!plainText || !encryptionKey) {
-      throw new Error(
-        "Trying to update view count of unencrypted paste somehow.",
-      );
+    if (!encryptionKey || !plainText) {
+      return;
     }
     const signature = await ProofOfKnowlege(encryptionKey, plainText, password);
     try {
@@ -115,9 +54,26 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
     } catch (e) {}
   };
 
+  const fetchPasteData = async () => {
+    try {
+      const data = await getPasteHandler({ paste_id: paste_id });
+      loadSuccess({
+        pasteId: paste_id,
+        iv: data.iv,
+        paste: data.paste,
+        passwordProtected: data.password_protected,
+      });
+      if (data.password_protected) {
+        decryptPasswordRequired();
+      }
+    } catch (e) {
+      loadFailed();
+    }
+  };
+
   const decodeCipher = async () => {
     const keyString = window.location.hash.substring(1);
-    if (pasteData !== null) {
+    if (pasteData) {
       try {
         const plainText = await DecryptPaste(
           DearmorValue(pasteData.paste),
@@ -125,111 +81,48 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
           DearmorValue(pasteData.iv),
           password,
         );
-        setPlainText(String.fromCharCode(...plainText));
-        setEncryptionKey(DearmorValue(keyString));
-        setInvalidPassword(false);
+        decryptSuccess(
+          DearmorValue(keyString),
+          String.fromCharCode(...plainText),
+        );
       } catch (error) {
-        if (password) {
-          setInvalidPassword(true);
-          setPassword(null);
-        } else {
-          setDecryptFailed(true);
-        }
+        decryptFailed();
       }
     }
   };
 
   useEffect(() => {
-    if (!pasteData) {
+    if (loadState == PasteLoadState.PENDING) {
       fetchPasteData();
     }
-    if (!plainText && pasteData && (!pasteData.passwordProtected || password)) {
-      decodeCipher();
+    if (loadState == PasteLoadState.SUCCESS) {
+      if (decryptState == PasteDecryptionState.PENDING) {
+        decodeCipher();
+      }
     }
-    if (plainText) {
+    if (decryptState == PasteDecryptionState.SUCCESS) {
       updateViewCount();
     }
     return () => {};
-  }, [pasteData, password, plainText]);
+  }, [loadState, decryptState]);
 
-  if (decryptFailed) {
-    return <h1>Failed to decrypt the paste</h1>;
+  if (
+    loadState == PasteLoadState.FAILED ||
+    decryptState == PasteDecryptionState.FAILED
+  ) {
+    return <PasteNotFound />;
   }
-  if (pasteNotFound) {
-    return (
-      <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-        <h2 className="text-2xl text-sembold mb-12">Your paste is gone.</h2>
-        <div>
-          <h1>It may have:</h1>
-          <ul className="list-disc [&>li]:mt-2 px-6">
-            <li>Reached its expiration time</li>
-            <li>Exceeded the view limit</li>
-            <li>Been manually deleted</li>
-            <li>Never existed at all</li>
-          </ul>
-          <Link href="/">
-            <Button className="mt-12">Create Paste</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  if (!pasteData) {
+  if (loadState == PasteLoadState.PENDING) {
     return <h1>Loading...</h1>;
   }
-  if (pasteData && pasteData.passwordProtected && !password) {
-    return (
-      <Dialog open={true}>
-        <Form {...form}>
-          <DialogContent className="sm:max-w-md" showCloseButton={false}>
-            <form
-              className="space-y-4"
-              onSubmit={form.handleSubmit(unlockPaste)}
-            >
-              <DialogHeader>
-                <DialogTitle>Password Required</DialogTitle>
-                <DialogDescription>
-                  This paste is protected with the password. Enter it to view
-                  the content.
-                </DialogDescription>
-              </DialogHeader>
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" placeholder="" />
-                    </FormControl>
-                    {invalidPassword && (
-                      <FormMessage>
-                        Invalid password. If you don't know the password you
-                        will not be able to decode paste content.
-                      </FormMessage>
-                    )}
-                  </FormItem>
-                )}
-              />
-              <DialogFooter className="sm:justify-start">
-                <Button type="submit">Unlock Paste</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Form>
-      </Dialog>
-    );
-  }
-  if (pasteData && !plainText) {
+  if (
+    loadState == PasteLoadState.SUCCESS &&
+    decryptState == PasteDecryptionState.PENDING
+  ) {
     return <h1>Decoding...</h1>;
   }
   return (
     <>
-      <DeleteModal
-        open={deleteModalOpen}
-        onOpenChange={setDeleteModalOpen}
-        deleteHandler={deletePaste}
-      />
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <Card>
           <CardContent className="min-h-170 whitespace-pre">
@@ -237,11 +130,13 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
           </CardContent>
         </Card>
         <div className="flex justify-start">
-          <Button className="w-full md:w-30" onClick={handleDelete}>
+          <Button className="w-full md:w-30" onClick={toggleDelete}>
             Delete
           </Button>
         </div>
       </div>
+      <EnterPasswordDialog />
+      <DeleteModal />
     </>
   );
 };

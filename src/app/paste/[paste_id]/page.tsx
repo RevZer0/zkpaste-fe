@@ -73,6 +73,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
 
   const decodeCipher = async () => {
     const keyString = window.location.hash.substring(1);
+    const decoder = new TextDecoder("utf-8");
     if (pasteData) {
       try {
         const plainText = await DecryptPaste(
@@ -81,10 +82,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
           DearmorValue(pasteData.iv),
           password,
         );
-        decryptSuccess(
-          DearmorValue(keyString),
-          String.fromCharCode(...plainText),
-        );
+        decryptSuccess(DearmorValue(keyString), decoder.decode(plainText));
       } catch (error) {
         decryptFailed();
       }

@@ -123,7 +123,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
     <>
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
         <Card>
-          <CardContent className="min-h-170 whitespace-pre">
+          <CardContent className="min-h-170 whitespace-pre-wrap">
             {plainText}
           </CardContent>
         </Card>

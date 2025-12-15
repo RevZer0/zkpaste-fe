@@ -26,9 +26,9 @@ const EncryptPayload = async (plaintext: string, password: string) => {
 };
 
 const DecryptPaste = async (
-  ciphertext: Uint8Array,
-  key: Uint8Array,
-  iv: Uint8Array,
+  ciphertext: any,
+  key: any,
+  iv: any,
   password: string | null,
 ): Promise<Uint8Array> => {
   let encryptionKey = await window.crypto.subtle.importKey(
@@ -62,7 +62,7 @@ const genAESKey = async () => {
 };
 
 const deriveKeyFromPassword = async (
-  baseKey: ArrayBuffer | Uint8Array,
+  baseKey: any,
   password: string,
 ) => {
   const ikm = await crypto.subtle.importKey("raw", baseKey, "HKDF", false, [
@@ -103,7 +103,7 @@ const signPayload = async (encryptionKey: CryptoKey, plaintext: string) => {
 };
 
 const ProofOfKnowlege = async (
-  encryptionKey: Uint8Array | ArrayBuffer,
+  encryptionKey: any,
   plaintext: string,
   password: string | null,
 ): Promise<Uint8Array> => {

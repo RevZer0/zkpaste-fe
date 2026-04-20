@@ -1,7 +1,4 @@
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -10,7 +7,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
 
+import { ArmorValue } from "@/app/service/armor";
+import { EncryptPayload } from "@/app/service/paste";
 import {
   Select,
   SelectContent,
@@ -18,12 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArmorValue } from "@/app/service/armor";
 import { createPasteHandler } from "@/handlers/paste/create";
-import { EncryptPayload } from "@/app/service/paste";
 import { usePasteStore } from "@/stores/paste";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 export const PasteCreateForm = () => {
   const onSuccessCallback = usePasteStore(
@@ -41,6 +41,7 @@ export const PasteCreateForm = () => {
     password: z.string(),
     ttl: z.string(),
     opens: z.string(),
+    syntax: z.string(),
   });
 
   const form = useForm({
@@ -50,6 +51,7 @@ export const PasteCreateForm = () => {
       password: "",
       ttl: "86400",
       opens: "",
+      syntax: "plaintext",
     },
   });
   const genPasteUrl = (paste_id: string, key: Uint8Array) => {
@@ -68,6 +70,7 @@ export const PasteCreateForm = () => {
         password_protected: values.password.length > 0,
         opens_count: parseInt(values.opens) || null,
         ttl: parseInt(values.ttl) || 86400,
+        syntax: values.syntax,
       },
     };
     try {
@@ -156,6 +159,32 @@ export const PasteCreateForm = () => {
                     placeholder="Enter password"
                     {...field}
                   ></Input>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="syntax"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Syntax</FormLabel>
+                <FormControl>
+                  <Select
+                    name={field.name}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    defaultValue="plaintext"
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="plaintext">PlainText</SelectItem>
+                      <SelectItem value="python">Python</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

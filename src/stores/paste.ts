@@ -36,6 +36,7 @@ interface PasteData {
   iv: string;
   paste: string;
   passwordProtected: boolean;
+  syntax: string;
 }
 
 interface PasteViewState {

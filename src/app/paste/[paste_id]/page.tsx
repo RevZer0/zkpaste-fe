@@ -1,19 +1,20 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useEffect } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-import { Button } from "@/components/ui/button";
+import { ArmorValue, DearmorValue } from "@/app/service/armor";
 import { DecryptPaste, ProofOfKnowlege } from "@/app/service/paste";
-import { DearmorValue, ArmorValue } from "@/app/service/armor";
+import { Button } from "@/components/ui/button";
 
 import { DeleteModal } from "@/components/DeleteModal";
 
+import { EnterPasswordDialog } from "@/components/view_paste/EnterPasswordDialog";
+import { PasteNotFound } from "@/components/view_paste/PasteNotFound";
 import { getPasteHandler } from "@/handlers/paste/get";
 import { updateViewCountHandler } from "@/handlers/paste/udpate_view";
-import { PasteNotFound } from "@/components/view_paste/PasteNotFound";
-import { EnterPasswordDialog } from "@/components/view_paste/EnterPasswordDialog";
 import {
   PasteDecryptionState,
   PasteLoadState,
@@ -62,6 +63,7 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
         iv: data.iv,
         paste: data.paste,
         passwordProtected: data.password_protected,
+        syntax: data.syntax,
       });
       if (data.password_protected) {
         decryptPasswordRequired();
@@ -119,15 +121,22 @@ const PasteView = ({ params }: { params: Promise<{ paste_id: string }> }) => {
   ) {
     return <h1>Decoding...</h1>;
   }
+
   return (
     <>
       <div className="space-y-4 p-4 min-h-full grow max-w-6xl">
-        <Card>
-          <CardContent className="min-h-170 whitespace-pre-wrap">
-            {plainText}
-          </CardContent>
-        </Card>
-        <div className="flex justify-start">
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={pasteData!.syntax}
+          // showLineNumbers
+          customStyle={{
+            margin: 0,
+            borderRadius: "0.5rem",
+          }}
+        >
+          {plainText!!}
+        </SyntaxHighlighter>
+        <div className="flex justify-start mt-6">
           <Button className="w-full md:w-30" onClick={toggleDelete}>
             Delete
           </Button>

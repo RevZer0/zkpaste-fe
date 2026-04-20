@@ -7,6 +7,7 @@ interface GetPasteResponse {
   paste: string;
   iv: string;
   password_protected: boolean;
+  syntax: string;
 }
 
 const getPasteHandler = async (
